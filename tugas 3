@@ -1,0 +1,115 @@
+> ## NO 1 A
+> #Mengecek Normalitas Multivariate
+> dat<-Data_Tugas_3_new
+> plot(dat)
+> summary(dat)
+       x1               x2              x3        
+ Min.   : 62.97   Min.   : 8.10   Min.   : 191.1  
+ 1st Qu.: 92.77   1st Qu.:11.02   1st Qu.: 199.2  
+ Median :130.32   Median :14.94   Median : 758.4  
+ Mean   :155.60   Mean   :14.72   Mean   : 710.9  
+ 3rd Qu.:239.41   3rd Qu.:16.93   3rd Qu.:1090.7  
+ Max.   :285.06   Max.   :25.33   Max.   :1484.1  
+> 
+> library(RVAideMemoire)
+> mshapiro.test(dat)
+
+	Multivariate Shapiro-Wilk normality test
+
+data:  (x1,x2,x3)
+W = 0.92959, p-value = 0.4439
+> 
+> ##Misal tidak data tidak berdistribusi multivariate normal
+> #MENCARI NILAI POWER ATAU LAMDA
+> library(car)
+> pow <- powerTransform(dat)
+> summary(dat)
+       x1               x2              x3        
+ Min.   : 62.97   Min.   : 8.10   Min.   : 191.1  
+ 1st Qu.: 92.77   1st Qu.:11.02   1st Qu.: 199.2  
+ Median :130.32   Median :14.94   Median : 758.4  
+ Mean   :155.60   Mean   :14.72   Mean   : 710.9  
+ 3rd Qu.:239.41   3rd Qu.:16.93   3rd Qu.:1090.7  
+ Max.   :285.06   Max.   :25.33   Max.   :1484.1  
+> 
+> # Melakukan transformasi untuk masing-masing variabel
+> x1_t <- dat$x1^pow$lambda[1]
+> x2_t <- dat$x2^pow$lambda[2]
+> x3_t <- dat$x3^pow$lambda[3]
+> dat_t <- data.frame(x1_t,x2_t,x3_t)
+> dat_t
+        x1_t     x2_t      x3_t
+1  12.511289 1.533285 0.8638723
+2  15.041724 1.526978 0.8757600
+3  11.661467 1.433514 0.8753877
+4   9.536362 1.490646 0.8689076
+5   9.339742 1.404372 0.8701963
+6  20.232319 1.627534 0.8997052
+7  20.281869 1.552766 0.8998377
+8  21.087827 1.514778 0.9000926
+9  11.459456 1.370598 0.8679221
+10 15.737253 1.441697 0.8982958
+> mshapiro.test(dat_t)
+
+	Multivariate Shapiro-Wilk normality test
+
+data:  (x1_t,x2_t,x3_t)
+W = 0.94176, p-value = 0.5727
+
+> ## NO 1 B
+> #Mencari matriks mu
+> a<-c(mean(dat$x1),mean(dat$x2),mean(dat$x3))
+> mu<-matrix(a,nrow =3)
+> mu
+        [,1]
+[1,] 155.603
+[2,]  14.724
+[3,] 710.911
+> 
+> #Mencari matriks covarians
+> X <-cbind(dat$x1,dat$x2,dat$x3)
+> matrixCov<- function(X){
++   n <-dim(X)[1]
++   ones <- rep(1,n)
++   C<-diag(1,n)-ones%*%t(ones)/n
++   Xc<-C %*% X
++   matCov<-t(Xc) %*% Xc/(n-1)
++   return(matCov)
++ } 
+> print(matrixCov(X))
+            [,1]        [,2]       [,3]
+[1,]   7476.4532   303.84255 -35575.960
+[2,]    303.8426    26.03547  -1064.933
+[3,] -35575.9596 -1064.93319 237054.270
+> sig1<-matrixCov(X)
+> sig1
+            [,1]        [,2]       [,3]
+[1,]   7476.4532   303.84255 -35575.960
+[2,]    303.8426    26.03547  -1064.933
+[3,] -35575.9596 -1064.93319 237054.270
+> 
+> matriks<-matrix(c(230,24,230.5))
+> matriks
+      [,1]
+[1,] 230.0
+[2,]  24.0
+[3,] 230.5
+> p<-t(matriks)-t(mu)
+> p
+       [,1]  [,2]     [,3]
+[1,] 74.397 9.276 -480.411
+> q<-solve(sig1)
+> q
+              [,1]         [,2]          [,3]
+[1,]  0.0008610797 -0.005835607  1.030110e-04
+[2,] -0.0058356074  0.086604095 -4.867230e-04
+[3,]  0.0001030110 -0.000486723  1.749131e-05
+> r<-matriks-mu
+> r
+         [,1]
+[1,]   74.397
+[2,]    9.276
+[3,] -480.411
+> p%*%q%*%r
+         [,1]
+[1,] 5.174796
